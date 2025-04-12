@@ -22,7 +22,7 @@ namespace YouTubeDownloader.Services
             _httpClient = new HttpClient();
         }
 
-        public async Task DownloadVideo(string videoUrl, string path)
+        public async Task DownloadVideo(string videoUrl, string path, int size)
         {
             var youtube = new YoutubeClient();
             var video = await youtube.Videos.GetAsync(videoUrl);
@@ -45,7 +45,7 @@ namespace YouTubeDownloader.Services
             var streamManifest = await youtube.Videos.Streams.GetManifestAsync(videoUrl);
 
             var a = streamManifest.GetAudioOnlyStreams().Where(s => s.Container == Container.Mp4).GetWithHighestBitrate();
-            var v = streamManifest.GetVideoOnlyStreams().Where(s => s.Container == Container.Mp4).Less1080();
+            var v = streamManifest.GetVideoOnlyStreams().Where(s => s.Container == Container.Mp4).Less(size);
 
             Console.OutputEncoding = System.Text.Encoding.Unicode;  
             
@@ -116,7 +116,7 @@ namespace YouTubeDownloader.Services
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        public static IVideoStreamInfo? Less1080(this IEnumerable<IVideoStreamInfo> streamInfos) =>
-            streamInfos.Where(s => s.VideoQuality.MaxHeight <= 1080).OrderByDescending(s => s.VideoQuality).FirstOrDefault();
+        public static IVideoStreamInfo? Less(this IEnumerable<IVideoStreamInfo> streamInfos, int size) =>
+            streamInfos.Where(s => s.VideoQuality.MaxHeight <= size).OrderByDescending(s => s.VideoQuality).FirstOrDefault();
     }
 }
